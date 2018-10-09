@@ -18,13 +18,15 @@ server.on('ready', function(){
   client.on('message', function (topic, message) {
     var msg = message.toString();
     if (topic === 'info') {
-      if (msg === 'weather') {
-        api.weather('Busan', function(res) {
+      args = msg.split(' ');
+      cmd = args[0];
+      if (cmd === 'weather') {
+        api.weather(args[1], function(res) {
           client.publish('weather', res);
         });
-      } else if (msg === 'news') {
+      } else if (cmd === 'news') {
         api.news(function(res) {
-          client.publich('news', res);
+          client.publish('news', JSON.stringify(res));
         });
       }
     }
