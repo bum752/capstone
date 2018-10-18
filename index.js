@@ -1,6 +1,23 @@
+/*
+  mqtt broker
+*/
 var mosca = require('mosca');
 var mqtt = require('mqtt');
+
+/*
+  날씨, 헤드라인 뉴스 등
+*/
 var api = require('./src/api');
+/*
+  database: sqlite3
+  memory cache: redis
+*/
+var sqlite3 = require('./src/sqlite3');
+var redis = require('./src/redis');
+
+/*
+  setting: config.json
+*/
 var config = require('./config');
 
 var server = new mosca.Server({port: config.mosca.port});
@@ -11,15 +28,20 @@ server.on('ready', function(){
 
   /* mqtt client connect */
   client.on('connect', function () {
+    console.log('mqtt client connect');
     client.subscribe('info');
+    client.subscribe('set');
+    client.subscribe('get');
   });
 
   /* mqtt client subscribe */
   client.on('message', function (topic, message) {
     var msg = message.toString();
+    var args = msg.split(' ');
+    var cmd = args[0];
+
     if (topic === 'info') {
-      args = msg.split(' ');
-      cmd = args[0];
+
       if (cmd === 'weather') {
         api.weather(args[1], function(res) {
           client.publish('weather', res);
@@ -29,6 +51,31 @@ server.on('ready', function(){
           client.publish('news', JSON.stringify(res));
         });
       }
+
+    } else if (topic === 'set') {
+
+      if(cmd === 'alarm') {
+        sqlite3.run('INSERT INTO alarm(title, hour, minute) VALUES (?, ?, ?)', [args[1], args[2], args[3]], function() {
+          redis.refresh('alarm', function(reply) {
+            client.publish('alarm', JSON.stringify(reply));
+          });
+        });
+      }
+
+    } else if (topic === 'get') {
+
+      if(cmd === 'alarm') {
+        redis.client.get('alarm', function(err, reply) {
+          if (reply) {
+            client.publish('alarm', JSON.stringify(reply));
+          } else {
+            redis.refresh('alarm', function(reply) {
+              client.publish('alarm', JSON.stringify(reply));
+            });
+          }
+        });
+      }
     }
+
   });
 });

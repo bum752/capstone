@@ -2,5 +2,12 @@
   "mosca": {
     "host": "127.0.0.1",
     "port": 1883
+  },
+  "redis": {
+    "host": "127.0.0.1",
+    "port": 6379
+  },
+  "sqlite3": {
+    "filename": "mirror.sqlite3"
   }
 }
