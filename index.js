@@ -29,8 +29,9 @@ server.on('ready', function(){
   /* mqtt client connect */
   client.on('connect', function () {
     console.log('mqtt client connect');
-    client.subscribe('info');
+
     client.subscribe('set');
+    client.subscribe('unset');
     client.subscribe('get');
   });
 
@@ -40,19 +41,7 @@ server.on('ready', function(){
     var args = msg.split(' ');
     var cmd = args[0];
 
-    if (topic === 'info') {
-
-      if (cmd === 'weather') {
-        api.weather(args[1], function(res) {
-          client.publish('weather', res);
-        });
-      } else if (cmd === 'news') {
-        api.news(function(res) {
-          client.publish('news', JSON.stringify(res));
-        });
-      }
-
-    } else if (topic === 'set') {
+    if (topic === 'set') {
 
       if (cmd === 'alarm') {
         sqlite3.run('INSERT INTO alarm(title, hour, minute) VALUES (?, ?, ?)', [args.slice(3).join(' '), args[1], args[2]], function(error) {
@@ -94,7 +83,15 @@ server.on('ready', function(){
 
     } else if (topic === 'get') {
 
-      if (cmd === 'alarm') {
+      if (cmd === 'weather') {
+        api.weather(args[1], function(res) {
+          client.publish('weather', res);
+        });
+      } else if (cmd === 'news') {
+        api.news(function(res) {
+          client.publish('news', JSON.stringify(res));
+        });
+      } else if (cmd === 'alarm') {
         sqlite3.all('SELECT * FROM alarm', function(err, rows) {
           if (rows) {
             client.publish('alarm', JSON.stringify(rows));
