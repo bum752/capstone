@@ -55,7 +55,7 @@ server.on('ready', function(){
     } else if (topic === 'set') {
 
       if (cmd === 'alarm') {
-        sqlite3.run('INSERT INTO alarm(title, hour, minute) VALUES (?, ?, ?)', [args.slice[3], args[1], args[2]], function(error) {
+        sqlite3.run('INSERT INTO alarm(title, hour, minute) VALUES (?, ?, ?)', [args.slice(3), args[1], args[2]], function(error) {
           sqlite3.all('SELECT * FROM alarm', function(err, rows) {
             if (rows) {
               client.publish('alarm', JSON.stringify(rows));
@@ -63,7 +63,7 @@ server.on('ready', function(){
           });
         });
       } else if (cmd === 'schedule') {
-        sqlite3.run('INSERT INTO schedule(title, time) VALUES (?, ?)', [args.slice[2], args[1]], function() {
+        sqlite3.run('INSERT INTO schedule(title, time) VALUES (?, ?)', [args.slice(2), args[1]], function() {
           sqlite3.all('SELECT * FROM schedule', function(err, rows) {
             if (rows) {
               client.publish('schedule', JSON.stringify(rows));
